@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediBridge | Clinical Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        document.documentElement.dataset.theme = localStorage.getItem('mb-theme') || 'light';
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js" defer></script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo-area">
+        <h2>Medi<span>Bridge</span></h2>
+        <div class="logo-tag">Clinical Bridge</div>
+    </div>
+
+    <nav class="menu">
+        <a href="#" class="active" data-view="dashboard"><span class="ico">📊</span> Dashboard</a>
+        <a href="#registry" data-view="dashboard" data-scroll="registry"><span class="ico">👥</span> Patient Registry</a>
+        <a href="#" data-view="reports"><span class="ico">📄</span> Reports</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <strong>Demo mode</strong>
+        Fictional data only. Not connected to real hospitals.
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="topbar">
+        <div>
+            <h1>Clinical Overview</h1>
+            <p class="subtitle" id="clock">Real-time patient tracking</p>
+        </div>
+        <div class="top-actions">
+            <label class="search" for="searchInput">
+                <span>🔍</span>
+                <input id="searchInput" type="text" placeholder="Search name, ID or hospital…" autocomplete="off">
+                <span class="kbd">/</span>
+            </label>
+            <button class="icon-btn" onclick="exportCsv()" title="Export patients as CSV">⬇</button>
+            <button class="icon-btn" id="themeBtn" title="Toggle theme">🌙</button>
+            <button class="btn btn-primary" onclick="toggleModal(true)">+ New Patient <span class="kbd" style="margin-left:.35rem;color:#e0f2fe;border-color:rgba(255,255,255,.4);background:transparent;">N</span></button>
+        </div>
+    </header>
+
+    <section class="metrics-grid dash">
+        <div class="card metric-card total">
+            <div class="kpi-top"><span class="kpi-label">Total Registered</span><span class="kpi-icon">🧾</span></div>
+            <div class="kpi-value" id="m-total">0</div>
+            <div class="kpi-delta">All hospitals</div>
+        </div>
+        <div class="card metric-card admit">
+            <div class="kpi-top"><span class="kpi-label">Currently Admitted</span><span class="kpi-icon">🛏️</span></div>
+            <div class="kpi-value" id="m-admit">0</div>
+            <div class="kpi-delta">Active inpatients</div>
+        </div>
+        <div class="card metric-card discharge">
+            <div class="kpi-top"><span class="kpi-label">Discharged</span><span class="kpi-icon">✅</span></div>
+            <div class="kpi-value" id="m-discharge">0</div>
+            <div class="kpi-delta">Completed stays</div>
+        </div>
+        <div class="card metric-card transfer">
+            <div class="kpi-top"><span class="kpi-label">Transferred</span><span class="kpi-icon">🔁</span></div>
+            <div class="kpi-value" id="m-transfer">0</div>
+            <div class="kpi-delta">Moved to another facility</div>
+        </div>
+    </section>
+
+    <section class="charts-row dash">
+        <div class="card">
+            <div class="card-head"><h3>Department Load</h3><span class="muted-sm">Patients per department</span></div>
+            <div class="chart-box"><canvas id="deptChart"></canvas></div>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>Status Mix</h3></div>
+            <div class="chart-box"><canvas id="statusChart"></canvas></div>
+        </div>
+    </section>
+
+    <section class="charts-row even dash">
+        <div class="card">
+            <div class="card-head"><h3>Recent Admissions</h3><span class="muted-sm">Latest 5</span></div>
+            <div id="activityList"></div>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>Hospital Split</h3></div>
+            <div class="chart-box short"><canvas id="hospitalChart"></canvas></div>
+        </div>
+    </section>
+
+    <section class="card table-card dash" id="registry">
+        <div class="table-toolbar">
+            <h3>Unified Patient Registry</h3>
+            <div class="filters" id="filters">
+                <button class="chip active" data-filter="All">All</button>
+                <button class="chip" data-filter="Admit">Admitted</button>
+                <button class="chip" data-filter="Discharge">Discharged</button>
+                <button class="chip" data-filter="Transfer">Transferred</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Hospital / Department</th>
+                        <th>Admission</th>
+                        <th>Status</th>
+                        <th>Discharge</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="patient-table-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card table-card reports-view" id="reportsView">
+        <div class="table-toolbar">
+            <div>
+                <h3>All Medical Reports</h3>
+                <span class="muted-sm">Metadata only. Contents stay locked until the patient approves.</span>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Report</th>
+                        <th>Hospital</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="reports-body"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- Registration modal -->
+<div class="modal-overlay" id="patientModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modalTitle">Patient Admission Registration</h2>
+            <button class="close-modal-btn" onclick="toggleModal(false)" aria-label="Close">&times;</button>
+        </div>
+        <form id="patientForm">
+            <div class="form-group">
+                <label for="hospital_name">Hospital Facility *</label>
+                <select id="hospital_name" required>
+                    <option value="" disabled selected hidden>Choose hospital</option>
+                    {% for h in hospitals %}
+                    <option value="{{ h }}">{{ h }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="patient_id">Patient ID *</label><input type="text" id="patient_id" required placeholder="PID-2026-004"></div>
+                <div class="form-group"><label for="full_name">Full Name *</label><input type="text" id="full_name" required placeholder="Demo Patient D"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="dob">Date of Birth *</label><input type="date" id="dob" required></div>
+                <div class="form-group">
+                    <label for="gender">Gender *</label>
+                    <select id="gender" required>
+                        <option value="" disabled selected hidden>Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="mobile_number">Mobile Number *</label><input type="tel" id="mobile_number" required placeholder="+91 90000 00004"></div>
+                <div class="form-group"><label for="address">Residential Address *</label><input type="text" id="address" required placeholder="Street, City, State"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hospital_department">Department *</label>
+                    <select id="hospital_department" required>
+                        <option value="" disabled selected hidden>Select department</option>
+                        <option value="General Admission">General Admission</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Orthopedic">Orthopedic</option>
+                        <option value="Emergency">Emergency</option>
+                    </select>
+                </div>
+                <div class="form-group"><label for="doctor_name">Attending Doctor *</label><input type="text" id="doctor_name" required placeholder="Dr. Demo Sharma"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="admission_date">Admission Date *</label><input type="date" id="admission_date" required></div>
+                <div class="form-group"><label for="admission_time">Admission Time *</label><input type="time" id="admission_time" required></div>
+            </div>
+            <div class="form-group"><label for="reason">Reason for Admission *</label><input type="text" id="reason" required placeholder="Primary complaint or symptoms"></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="patient_status">Patient Status *</label>
+                    <select id="patient_status" required>
+                        {% for s in statuses %}
+                        <option value="{{ s }}">{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" id="discharge_date_group">
+                    <label for="discharge_date">Discharge Date</label>
+                    <input type="date" id="discharge_date">
+                </div>
+            </div>
+            <div class="form-group"><label for="remarks">Clinical Remarks</label><input type="text" id="remarks" placeholder="Optional"></div>
+            <div class="form-group"><label for="feedback">Patient / Family Feedback</label><input type="text" id="feedback" placeholder="Optional"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="toggleModal(false)">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Patient</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
