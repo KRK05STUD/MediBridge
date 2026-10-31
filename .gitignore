@@ -1,2 +1,6 @@
 medibridge.db
 __pycache__/**/*
+
+.venv/
+medibridge.db
+__pycache__/**/*
