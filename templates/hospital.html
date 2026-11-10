@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediBridge | Hospital Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        document.documentElement.dataset.theme = localStorage.getItem('mb-theme') || 'light';
+    </script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo-area">
+        <h2>Medi<span>Bridge</span></h2>
+        <div class="logo-tag">Hospital Portal</div>
+    </div>
+
+    <nav class="menu">
+        <a href="#" class="active" data-view="find"><span class="ico">🔎</span> Find patient</a>
+        <a href="#" data-view="permissions"><span class="ico">🔐</span> Permissions</a>
+        <a href="/"><span class="ico">📊</span> Dashboard</a>
+        <a href="/logout"><span class="ico">⏻</span> Log out</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <strong>{{ hospital }}</strong>
+        Demo data – fictional.
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="topbar">
+        <div>
+            <h1 id="pageTitle">Find patient</h1>
+            <p class="subtitle">Look up a patient by Aadhaar and request their lab reports</p>
+        </div>
+        <div class="top-actions">
+            <span class="pill info">{{ hospital }}</span>
+        </div>
+    </header>
+
+    <!-- Find patient -->
+    <section id="viewFind">
+        <div class="card find-card">
+            <form id="lookupForm" class="lookup-row">
+                <div class="form-group grow">
+                    <label for="aadhaar">Patient Aadhaar number</label>
+                    <input id="aadhaar" class="aadhaar-input" inputmode="numeric"
+                           maxlength="14" placeholder="XXXX XXXX XXXX" autocomplete="off" required>
+                </div>
+                <button class="btn btn-primary" type="submit">Look up</button>
+            </form>
+            <p class="muted-sm" style="margin-top:.75rem">
+                Only basic details are shown. Lab reports are released only after the patient approves your request.
+            </p>
+        </div>
+        <div id="patientResult"></div>
+    </section>
+
+    <!-- Permissions -->
+    <section id="viewPermissions" style="display:none">
+        <div class="card table-card">
+            <div class="table-toolbar">
+                <div>
+                    <h3>Access requests and grants</h3>
+                    <span class="muted-sm">Requests your hospital has made to other hospitals' patients</span>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Aadhaar</th>
+                            <th>Scope</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="permBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/hospital.js') }}"></script>
+</body>
+</html>

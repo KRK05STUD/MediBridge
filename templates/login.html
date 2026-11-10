@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediBridge | Sign in</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        document.documentElement.dataset.theme = localStorage.getItem('mb-theme') || 'light';
+    </script>
+</head>
+<body class="login-body" data-role="{{ role }}">
+<main class="login-wrap">
+    <section class="card login-card">
+        <div class="login-brand">Medi<span>Bridge</span></div>
+
+        <div class="tabs">
+            <button class="tab" type="button" data-role="hospital">Hospital staff</button>
+            <button class="tab" type="button" data-role="patient">Patient</button>
+        </div>
+
+        <form id="hospitalForm" class="login-form">
+            <div class="form-group">
+                <label for="hUser">Username</label>
+                <input id="hUser" autocomplete="username" required>
+            </div>
+            <div class="form-group">
+                <label for="hPass">Password</label>
+                <input id="hPass" type="password" autocomplete="current-password" required>
+            </div>
+            <button class="btn btn-primary" type="submit" style="width:100%">Sign in as hospital</button>
+        </form>
+
+        <form id="patientForm" class="login-form">
+            <div class="form-group">
+                <label for="pId">Patient ID</label>
+                <input id="pId" placeholder="PID-2026-001" autocomplete="username" required>
+            </div>
+            <div class="form-group">
+                <label for="pPass">Password</label>
+                <input id="pPass" type="password" autocomplete="current-password" required>
+            </div>
+            <button class="btn btn-primary" type="submit" style="width:100%">Sign in as patient</button>
+        </form>
+
+        <p id="loginError" class="login-error" role="alert"></p>
+
+        <p class="notice-line">
+            Demo hospital logins: <code>citycentral</code> / <code>city-demo-2026</code>
+            or <code>metro</code> / <code>metro-demo-2026</code>.<br>
+            Demo patient logins: any seeded Patient ID with password <code>demo-patient-2026</code>.<br>
+            Demo data – fictional. Not connected to real hospitals.
+        </p>
+    </section>
+</main>
+
+<script>
+    const errorEl = document.getElementById('loginError');
+
+    function setRole(role) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.role === role));
+        document.getElementById('hospitalForm').style.display = role === 'hospital' ? '' : 'none';
+        document.getElementById('patientForm').style.display = role === 'patient' ? '' : 'none';
+        errorEl.textContent = '';
+        history.replaceState(null, '', '/login?role=' + role);
+    }
+
+    async function submitLogin(e, url, body, next) {
+        e.preventDefault();
+        errorEl.textContent = '';
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+            location.href = next;
+        } else {
+            errorEl.textContent = data.error || 'Sign in failed. Please try again.';
+        }
+    }
+
+    document.querySelectorAll('.tab').forEach(t =>
+        t.addEventListener('click', () => setRole(t.dataset.role)));
+
+    document.getElementById('hospitalForm').addEventListener('submit', e =>
+        submitLogin(e, '/api/auth/hospital/login', {
+            username: document.getElementById('hUser').value.trim(),
+            password: document.getElementById('hPass').value
+        }, '/'));
+
+    document.getElementById('patientForm').addEventListener('submit', e =>
+        submitLogin(e, '/api/auth/patient/login', {
+            patient_id: document.getElementById('pId').value.trim(),
+            password: document.getElementById('pPass').value
+        }, '/my'));
+
+    setRole(document.body.dataset.role);
+</script>
+</body>
+</html>

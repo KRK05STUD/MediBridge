@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediBridge | My Records</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        document.documentElement.dataset.theme = localStorage.getItem('mb-theme') || 'light';
+    </script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo-area">
+        <h2>Medi<span>Bridge</span></h2>
+        <div class="logo-tag">My Health Records</div>
+    </div>
+
+    <nav class="menu">
+        <a href="#" class="active" data-view="records"><span class="ico">📁</span> My records</a>
+        <a href="#" data-view="requests"><span class="ico">🔔</span> Requests</a>
+        <a href="#" data-view="sharing"><span class="ico">🤝</span> Sharing</a>
+        <a href="#" data-view="account"><span class="ico">👤</span> Account</a>
+        <a href="/logout"><span class="ico">⏻</span> Log out</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <strong>Demo data – fictional</strong>
+        Your records are shared only with your permission.
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="topbar">
+        <div>
+            <h1 id="pageTitle">My records</h1>
+            <p class="subtitle" id="profileLine">Loading…</p>
+        </div>
+    </header>
+
+    <section id="view-records">
+        <div class="card">
+            <div class="record-grid" id="recordList"></div>
+        </div>
+    </section>
+
+    <section id="view-requests" style="display:none">
+        <div class="card" id="requestList"></div>
+    </section>
+
+    <section id="view-sharing" style="display:none">
+        <div class="card">
+            <div class="card-head">
+                <h3>Share my records</h3>
+                <span class="muted-sm">Choose a hospital and what it can see. You can revoke at any time.</span>
+            </div>
+            <form id="shareForm" class="inline-form">
+                <select id="shareHospital" required>
+                    <option value="" disabled selected hidden>Choose hospital</option>
+                    {% for h in hospitals %}
+                    <option value="{{ h }}">{{ h }}</option>
+                    {% endfor %}
+                </select>
+                <select id="shareScope">
+                    <option value="LAB">Lab reports only</option>
+                    <option value="ALL">All records (incl. prescriptions)</option>
+                </select>
+                <button class="btn btn-primary" type="submit">Share</button>
+            </form>
+        </div>
+
+        <div class="card table-card section-gap">
+            <div class="card-head"><h3>Sharing history</h3></div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hospital</th>
+                            <th>Access</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="grantsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="view-account" style="display:none">
+        <div class="card" style="max-width:480px">
+            <div class="card-head"><h3>Change password</h3></div>
+            <form id="pwForm">
+                <div class="form-group">
+                    <label for="pwCurrent">Current password</label>
+                    <input id="pwCurrent" type="password" autocomplete="current-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="pwNew">New password (min 8 characters)</label>
+                    <input id="pwNew" type="password" minlength="8" autocomplete="new-password" required>
+                </div>
+                <button class="btn btn-primary" type="submit">Update password</button>
+            </form>
+        </div>
+    </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/patient.js') }}"></script>
+</body>
+</html>

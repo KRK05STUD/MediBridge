@@ -182,6 +182,7 @@ async function fetchPatientData() {
         console.error('Could not load patients:', err);
         toast('Could not load patients. Is the server running?', 'error');
     }
+    if (res.status === 401) { location.href = '/login'; return; }
 }
 
 function updateMetrics(patients) {
@@ -408,6 +409,7 @@ async function handleFormSubmit(event) {
         hospital_name: v('hospital_name'),
         patient_id: v('patient_id'),
         full_name: v('full_name'),
+        aadhaar: v('aadhaar') || null,
         dob: v('dob'),
         gender: v('gender'),
         mobile_number: v('mobile_number'),
